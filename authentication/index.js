@@ -1,14 +1,14 @@
 import express from 'express'
+import jwt from 'jsonwebtoken'
+
+const JWT_SECRET= "randomsecretkey&123"
 
 const app = express();
 app.use(express.json());
 
 const users = [];
 
-function generateTocken() {                                 //generate token
-    return Math.random().toString(36).substr(2, 15);
 
-}
 
 app.post('/signup', function (req, res) {                    //signup
     const username = req.body.username;
@@ -41,8 +41,10 @@ app.post('/signin', function (req, res) {                   //signin
         }
     }
         if (foundUser) {
-            const token = generateTocken();
-            foundUser.token = token
+            const token =jwt.sign({
+             username: username
+            },JWT_SECRET)
+            
             res.json({
                 token: token
             })
@@ -56,10 +58,12 @@ app.post('/signin', function (req, res) {                   //signin
 
 
 app.get('/me',function(req,res){                            //get user info
-    const token= req.headers.token;
+    const token= req.headers.token; //jwt
+    const decodeInfo= jwt.verify(token,JWT_SECRET);
     let foundUser = null;
+    const username= decodeInfo.username;
     for (let i = 0; i < users.length; i++) {
-        if (users[i].token == token) {
+        if (users[i].username == username) {
             foundUser = users[i];
             }
     }
