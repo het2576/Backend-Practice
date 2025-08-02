@@ -1,16 +1,19 @@
 import express from 'express'
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET= "randomsecretkey&123"
+const JWT_SECRET = "randomsecretkey&123"
 
 const app = express();
 app.use(express.json());
 
 const users = [];
 
+function logger(req,res,next){                      //logger middleware(logs the req)
+    console.log(req.method + " request came");
+    next();
+}
 
-
-app.post('/signup', function (req, res) {                    //signup
+app.post('/signup', logger, function (req, res) {                    //signup
     const username = req.body.username;
     const password = req.body.password;
 
@@ -20,16 +23,14 @@ app.post('/signup', function (req, res) {                    //signup
     })
 
     res.json({
-        msg : 'you are signed up',
+        msg: 'you are signed up',
     })
-
-    console.log(users);
 
 })
 
 
-app.post('/signin', function (req, res) {                   //signin
-    
+app.post('/signin', logger, function (req, res) {                   //signin
+
     const username = req.body.username;
     const password = req.body.password;
 
@@ -40,43 +41,53 @@ app.post('/signin', function (req, res) {                   //signin
             foundUser = users[i];
         }
     }
-        if (foundUser) {
-            const token =jwt.sign({
-             username: username
-            },JWT_SECRET)
-            
-            res.json({
-                token: token
-            })
-        } else {
-            res.status(403).send({
-                message: "Invalid username or password"
-            })
-        }
-    console.log(users);
+    if (foundUser) {
+        const token = jwt.sign({
+            username: username
+        }, JWT_SECRET)
+
+        res.json({
+            token: token
+        })
+    } else {
+        res.status(403).send({
+            message: "Invalid username or password"
+        })
+    }
 })
 
 
-app.get('/me',function(req,res){                            //get user info
-    const token= req.headers.token; //jwt
-    const decodeInfo= jwt.verify(token,JWT_SECRET);
-    let foundUser = null;
-    const username= decodeInfo.username;
-    for (let i = 0; i < users.length; i++) {
-        if (users[i].username == username) {
-            foundUser = users[i];
-            }
+function auth(req, res, next) {                    // auth middlewear 
+    const token = req.headers.token;
+    const decodedData = jwt.verify(token, JWT_SECRET);
+
+    if (decodedData.username) {
+        req.username= decodedData.username;
+        next();
     }
-    if (foundUser) {
-        res.json({
-            username: foundUser.username,
-            password: foundUser.password
-            })
-            } else {
-                res.status(403).send({
-                    message: "Invalid token"
-                    })
-            }
+    else {
+        res.status(403).send({
+            message: "Invalid token, You are not logged in"
+        })
+    }
+}
+
+
+app.get('/me', logger, auth, function (req, res) {                            //get user info
+
+    let foundUser = null;
+
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].username === req.username) {
+            foundUser = users[i];
+        }
+    }
+
+    res.json({
+        username: foundUser.username,
+        password: foundUser.password
+    })
+
 })
 
 app.listen(3000, () => {
