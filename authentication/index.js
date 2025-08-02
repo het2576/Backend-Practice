@@ -13,6 +13,11 @@ function logger(req,res,next){                      //logger middleware(logs the
     next();
 }
 
+app.get('/',function(req,res){
+    res.sendFile("/Users/het/Desktop/Everything/Practice/authentication" + "/public/index.html");
+    });
+
+
 app.post('/signup', logger, function (req, res) {                    //signup
     const username = req.body.username;
     const password = req.body.password;
