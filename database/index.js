@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';        //for hashing the password
 import z from 'zod';     //for input validation
 
 
-mongoose.connect("mongodb+srv://admin:admin123@cluster0.ui07x4w.mongodb.net/todo-app")
+mongoose.connect("")
 const JWT_SECRET = "randomsecretkey&123";
 
 const app = express();
